@@ -9,10 +9,14 @@ function isActive(string $path): string {
 // Dashboard aktif kalau tidak berada di subfolder manapun
 $isDashboard = !str_contains($currentPage, '/dokter/')
             && !str_contains($currentPage, '/pasien/')
-            && !str_contains($currentPage, '/pendaftaran/');
+            && !str_contains($currentPage, '/pendaftaran/')
+            && !str_contains($currentPage, '/obat/')
+            && !str_contains($currentPage, '/tagihan/')
+            && !str_contains($currentPage, '/pembayaran/');
 ?>
 
 <aside class="sidebar">
+
     <div class="sidebar-brand">
         <div class="brand-icon">&#43;</div>
         <div>
@@ -22,6 +26,8 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
     </div>
 
     <nav class="sidebar-nav">
+
+        <!-- MENU UTAMA -->
         <div class="nav-section-label">Menu Utama</div>
 
         <a href="<?= $basePath ?? '' ?>index.php"
@@ -30,6 +36,7 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
             Dashboard
         </a>
 
+        <!-- DATA MASTER -->
         <div class="nav-section-label">Data Master</div>
 
         <a href="<?= $basePath ?? '' ?>pasien/index.php"
@@ -44,6 +51,13 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
             Dokter
         </a>
 
+        <a href="<?= $basePath ?? '' ?>obat/index.php"
+           class="nav-item <?= isActive('/obat/') ?>">
+            <span class="nav-icon">&#9632;</span>
+            Obat
+        </a>
+
+        <!-- TRANSAKSI -->
         <div class="nav-section-label">Transaksi</div>
 
         <a href="<?= $basePath ?? '' ?>pendaftaran/index.php"
@@ -51,9 +65,24 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
             <span class="nav-icon">&#9632;</span>
             Pendaftaran
         </a>
+
+        <a href="<?= $basePath ?? '' ?>tagihan/index.php"
+           class="nav-item <?= isActive('/tagihan/') ?>">
+            <span class="nav-icon">&#9632;</span>
+            Tagihan
+        </a>
+
+        <a href="<?= $basePath ?? '' ?>pembayaran/index.php"
+           class="nav-item <?= isActive('/pembayaran/') ?>">
+            <span class="nav-icon">&#9632;</span>
+            Pembayaran
+        </a>
+
     </nav>
 
     <div class="sidebar-footer">
-        Sistem Informasi Manajemen<br>Rumah Sakit
+        Sistem Informasi Manajemen<br>
+        Rumah Sakit
     </div>
+
 </aside>
