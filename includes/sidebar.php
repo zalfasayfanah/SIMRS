@@ -12,7 +12,9 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
             && !str_contains($currentPage, '/pendaftaran/')
             && !str_contains($currentPage, '/obat/')
             && !str_contains($currentPage, '/tagihan/')
-            && !str_contains($currentPage, '/pembayaran/');
+            && !str_contains($currentPage, '/pembayaran/')
+            && !str_contains($currentPage, '/pemeriksaan/')
+            && !str_contains($currentPage, '/resep/');
 ?>
 
 <aside class="sidebar">
@@ -64,6 +66,18 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
            class="nav-item <?= isActive('/pendaftaran/') ?>">
             <span class="nav-icon">&#9632;</span>
             Pendaftaran
+        </a>
+
+        <a href="<?= $basePath ?? '' ?>pemeriksaan/index.php"
+        class="nav-item <?= isActive('/pemeriksaan/') ?>">
+            <span class="nav-icon">&#9632;</span>
+            Pemeriksaan
+        </a>
+
+        <a href="<?= $basePath ?? '' ?>resep/index.php"
+        class="nav-item <?= isActive('/resep/') ?>">
+            <span class="nav-icon">&#9632;</span>
+            Resep
         </a>
 
         <a href="<?= $basePath ?? '' ?>tagihan/index.php"
