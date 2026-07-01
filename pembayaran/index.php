@@ -106,7 +106,7 @@ include '../includes/sidebar.php';
 
 </div>
 
-<a href="tambah.php" class="btn btn-primary">
+<a href="bayar.php" class="btn btn-primary">
 
 + Pembayaran Baru
 
@@ -329,7 +329,7 @@ Belum ada data pembayaran.
 
 <br><br>
 
-<a href="tambah.php" class="btn btn-primary">
+<a href="bayar.php" class="btn btn-primary">
 
 + Tambah Pembayaran
 
