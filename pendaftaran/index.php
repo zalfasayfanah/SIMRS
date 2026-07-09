@@ -45,7 +45,7 @@ $poliList = mysqli_query($conn, "SELECT DISTINCT poli FROM pendaftaran ORDER BY 
 
 // Stat hari ini
 $statMenunggu  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'MENUNGGU'"))[0]  ?? 0;
-$statDipanggil = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'DIPANGGIL'"))[0] ?? 0;
+$statDiperiksa = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'Diperiksa'"))[0] ?? 0;
 $statSelesai   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'SELESAI'"))[0]   ?? 0;
 $statTotal     = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl'"))[0] ?? 0;
 
@@ -81,8 +81,8 @@ include '../includes/sidebar.php';
             <div class="stat-value"><?= $statMenunggu ?></div>
         </div>
         <div class="stat-card info">
-            <div class="stat-label">Dipanggil</div>
-            <div class="stat-value"><?= $statDipanggil ?></div>
+            <div class="stat-label">Diperiksa</div>
+            <div class="stat-value"><?= $statDiperiksa ?></div>
         </div>
         <div class="stat-card accent">
             <div class="stat-label">Selesai</div>
@@ -114,7 +114,7 @@ include '../includes/sidebar.php';
                     <label style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Status</label>
                     <select name="status_daftar" style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                         <option value="">Semua status</option>
-                        <?php foreach (['MENUNGGU','DIPANGGIL','SELESAI','BATAL'] as $st): ?>
+                        <?php foreach (['MENUNGGU','Diperiksa','SELESAI','BATAL'] as $st): ?>
                         <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>><?= ucfirst(strtolower($st)) ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -179,7 +179,7 @@ include '../includes/sidebar.php';
                         $st = $row['status_daftar'];
                         $sc = match($st) {
                             'MENUNGGU'  => 'badge-warning',
-                            'DIPANGGIL' => 'badge-info',
+                            'Diperiksa' => 'badge-info',
                             'SELESAI'   => 'badge-success',
                             'BATAL'     => 'badge-danger',
                             default     => 'badge-gray'
