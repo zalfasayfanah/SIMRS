@@ -352,3 +352,10 @@ Belum ada data pembayaran.
 </div>
 
 <?php include '../includes/footer.php'; ?>
+<a
+href="../pembayaran/bayar.php?id=<?= $row['id_tagihan'] ?>"
+class="btn btn-success btn-sm">
+
+Bayar
+
+</a>
