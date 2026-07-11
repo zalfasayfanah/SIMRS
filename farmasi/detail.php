@@ -1,25 +1,31 @@
 <?php
 require_once '../config/database.php';
 
-$id = $_GET['id'];
+$pageTitle = "Detail Resep";
+$basePath = "../";
+// Amankan parameter ID dari URL
+$id = mysqli_real_escape_string($conn, $_GET['id']);
 
 $sql = "
 SELECT r.*,
        o.nama_obat,
        ps.nama AS nama_pasien
 FROM resep r
-JOIN pemeriksaan pm
-ON pm.id_pemeriksaan=r.id_pemeriksaan
-JOIN pendaftaran pd
-ON pd.id_pendaftaran=pm.id_pendaftaran
-JOIN pasien ps
-ON ps.id_pasien=pd.id_pasien
-JOIN obat o
-ON o.id_obat=r.id_obat
+JOIN pemeriksaan pm ON pm.id_pemeriksaan=r.id_pemeriksaan
+JOIN pendaftaran pd ON pd.id_pendaftaran=pm.id_pendaftaran
+JOIN pasien ps ON ps.id_pasien=pd.id_pasien
+JOIN obat o ON o.id_obat=r.id_obat
 WHERE r.id_resep='$id'
 ";
 
-$data = mysqli_fetch_assoc(mysqli_query($conn, $sql));
+$result = mysqli_query($conn, $sql);
+$data = mysqli_fetch_assoc($result);
+
+// Proteksi jika ID resep tidak ditemukan di database
+if (!$data) {
+    echo "<script>alert('Data resep tidak ditemukan!'); window.location='index.php';</script>";
+    exit();
+}
 
 include '../includes/header.php';
 include '../includes/sidebar.php';

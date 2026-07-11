@@ -33,9 +33,9 @@ include '../includes/sidebar.php';
             <p>Kelola resep pasien rawat jalan</p>
         </div>
 
-        <a href="tambah.php" class="btn btn-primary">
+        <!-- <a href="tambah.php" class="btn btn-primary">
             + Tambah Resep
-        </a>
+        </a> -->
     </div>
 
     <div class="card">

@@ -368,3 +368,52 @@ tbody tr:hover td { background: #F8FAFC; }
     .form-row { grid-template-columns: 1fr; }
     .stat-grid { grid-template-columns: 1fr 1fr; }
 }
+
+.card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:15px;
+}
+
+.dokter-form{
+    margin:0;
+}
+
+.dokter-select{
+    width:220px;      /* ukuran dropdown */
+    min-width:220px;
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:20px;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+}
+
+.form-group label{
+    margin-bottom:8px;
+    font-weight:600;
+}
+
+.full-width{
+    grid-column:1 / -1;
+}
+
+.table-detail{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.table-detail td{
+    padding:10px;
+    border-bottom:1px solid #eee;
+}
+
+/* Tombol hamburger */
+/*  */

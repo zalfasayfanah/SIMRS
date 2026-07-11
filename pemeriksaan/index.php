@@ -4,19 +4,41 @@ require_once '../config/database.php';
 $pageTitle = 'Data Pemeriksaan';
 $basePath = '../';
 
-$sql = "
-SELECT p.*,
-       ps.nama AS nama_pasien,
-       ps.no_rm,
-       d.nama_dokter
-FROM pemeriksaan p
-JOIN pendaftaran pd ON pd.id_pendaftaran = p.id_pendaftaran
-JOIN pasien ps ON ps.id_pasien = pd.id_pasien
-JOIN dokter d ON d.id_dokter = p.id_dokter
-ORDER BY p.tgl_pemeriksaan DESC
-";
+$id_dokter_terpilih = isset($_GET['id_dokter']) ? intval($_GET['id_dokter']) : 0;
 
-$result = mysqli_query($conn, $sql);
+// Daftar dokter
+$dokterResult = mysqli_query($conn, "
+    SELECT id_dokter, nama_dokter
+    FROM dokter
+    ORDER BY nama_dokter
+");
+
+// Pasien menunggu
+$pasienMenunggu = null;
+
+if ($id_dokter_terpilih > 0) {
+
+    $sql = "
+    SELECT
+        pd.id_pendaftaran,
+        pd.tgl_daftar,
+        pd.status_daftar,
+        ps.no_rm,
+        ps.nama AS nama_pasien
+    FROM pendaftaran pd
+    JOIN pasien ps
+        ON ps.id_pasien = pd.id_pasien
+    WHERE pd.id_dokter = ?
+      AND pd.status_daftar = 'MENUNGGU'
+    ORDER BY pd.tgl_daftar ASC
+    ";
+
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $id_dokter_terpilih);
+    mysqli_stmt_execute($stmt);
+
+    $pasienMenunggu = mysqli_stmt_get_result($stmt);
+}
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
@@ -27,56 +49,94 @@ include '../includes/sidebar.php';
     <div class="page-header">
         <div>
             <h1>Pemeriksaan</h1>
-            <p>Kelola data pemeriksaan pasien</p>
+            <p>Daftar pasien yang menunggu pemeriksaan.</p>
         </div>
-
-        <a href="tambah.php" class="btn btn-primary">
-            + Tambah Pemeriksaan
-        </a>
     </div>
 
     <div class="card">
+
+        <div class="card-header">
+            <h3>Pilih Dokter</h3>
+
+            <form method="GET">
+                <select
+                    name="id_dokter"
+                    class="form-control"
+                    onchange="this.form.submit()">
+
+                    <option value="">-- Pilih Dokter --</option>
+
+                    <?php while($d = mysqli_fetch_assoc($dokterResult)): ?>
+
+                    <option
+                        value="<?= $d['id_dokter'] ?>"
+                        <?= $id_dokter_terpilih == $d['id_dokter'] ? 'selected' : '' ?>>
+
+                        <?= htmlspecialchars($d['nama_dokter']) ?>
+
+                    </option>
+
+                    <?php endwhile; ?>
+
+                </select>
+            </form>
+
+        </div>
+
+        <?php if($id_dokter_terpilih > 0): ?>
+
         <div class="table-wrap">
 
             <table>
+
                 <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>No RM</th>
-                        <th>Pasien</th>
-                        <th>Dokter</th>
-                        <th>Diagnosa</th>
-                        <th>ICD-10</th>
-                        <th>Aksi</th>
-                    </tr>
+
+                <tr>
+
+                    <th>No RM</th>
+                    <th>Nama Pasien</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+
+                </tr>
+
                 </thead>
 
                 <tbody>
 
-                <?php if(mysqli_num_rows($result) > 0): ?>
+                <?php if(mysqli_num_rows($pasienMenunggu)>0): ?>
 
-                    <?php while($row = mysqli_fetch_assoc($result)): ?>
+                    <?php while($row=mysqli_fetch_assoc($pasienMenunggu)): ?>
 
                     <tr>
 
-                        <td>
-                            <?= date('d/m/Y H:i', strtotime($row['tgl_pemeriksaan'])) ?>
-                        </td>
-
-                        <td><?= htmlspecialchars($row['no_rm']) ?></td>
+                        <td><?= $row['no_rm'] ?></td>
 
                         <td><?= htmlspecialchars($row['nama_pasien']) ?></td>
 
-                        <td><?= htmlspecialchars($row['nama_dokter']) ?></td>
-
-                        <td><?= htmlspecialchars($row['diagnosa']) ?></td>
-
-                        <td><?= htmlspecialchars($row['icd_10']) ?></td>
+                        <td><?= date('d/m/Y H:i',strtotime($row['tgl_daftar'])) ?></td>
 
                         <td>
-                            <a href="detail.php?id=<?= $row['id_pemeriksaan'] ?>" class="btn btn-secondary btn-sm">Detail</a>
 
-                            <a href="edit.php?id=<?= $row['id_pemeriksaan'] ?>" class="btn btn-primary btn-sm">Edit</a>
+                            <span class="badge badge-warning">
+
+                                <?= $row['status_daftar'] ?>
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="pilih.php?id_pendaftaran=<?= $row['id_pendaftaran'] ?>&id_dokter=<?= $id_dokter_terpilih ?>"
+                                class="btn btn-primary btn-sm">
+
+                                Periksa
+
+                            </a>
+
                         </td>
 
                     </tr>
@@ -86,9 +146,13 @@ include '../includes/sidebar.php';
                 <?php else: ?>
 
                     <tr>
-                        <td colspan="7" style="text-align:center">
-                            Belum ada data pemeriksaan
+
+                        <td colspan="5" style="text-align:center">
+
+                            Tidak ada pasien menunggu.
+
                         </td>
+
                     </tr>
 
                 <?php endif; ?>
@@ -98,6 +162,9 @@ include '../includes/sidebar.php';
             </table>
 
         </div>
+
+        <?php endif; ?>
+
     </div>
 
 </div>

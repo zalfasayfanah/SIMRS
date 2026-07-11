@@ -5,38 +5,55 @@
 
 require_once '../config/database.php';
 
-$basePath  = '../';
+$basePath = '../';
 $pageTitle = 'Pendaftaran';
 
 $pesan = '';
 if (isset($_GET['status'])) {
-    $pesan = match($_GET['status']) {
+    $pesan = match ($_GET['status']) {
         'tambah_ok' => ['tipe' => 'success', 'teks' => 'Pendaftaran berhasil disimpan.'],
-        'edit_ok'   => ['tipe' => 'success', 'teks' => 'Data pendaftaran berhasil diperbarui.'],
-        'hapus_ok'  => ['tipe' => 'success', 'teks' => 'Data pendaftaran berhasil dihapus.'],
-        'gagal'     => ['tipe' => 'danger',  'teks' => 'Terjadi kesalahan, silakan coba lagi.'],
-        default     => ''
+        'edit_ok' => ['tipe' => 'success', 'teks' => 'Data pendaftaran berhasil diperbarui.'],
+        'hapus_ok' => ['tipe' => 'success', 'teks' => 'Data pendaftaran berhasil dihapus.'],
+        'gagal' => ['tipe' => 'danger', 'teks' => 'Terjadi kesalahan, silakan coba lagi.'],
+        default => ''
     };
 }
 
-// Filter tanggal — default hari ini
-$filterTgl  = $_GET['tgl']    ?? date('Y-m-d');
-$filterPoli = trim($_GET['poli']   ?? '');
+// Filter tanggal (Rentang tanggal) — default hari ini 
+$filterTglAwal = $_GET['tgl_awal'] ?? date('Y-m-01'); // default awal bulan
+$filterTglAkhir = $_GET['tgl_akhir'] ?? date('Y-m-d');  // default hari ini
+
+$filterPoli = trim($_GET['poli'] ?? '');
 $filterStatus = trim($_GET['status_daftar'] ?? '');
 
-$where = ["DATE(p.tgl_daftar) = '" . mysqli_real_escape_string($conn, $filterTgl) . "'"];
-if ($filterPoli   !== '') $where[] = "p.poli = '"          . mysqli_real_escape_string($conn, $filterPoli) . "'";
-if ($filterStatus !== '') $where[] = "p.status_daftar = '" . mysqli_real_escape_string($conn, $filterStatus) . "'";
+$where = [];
+
+$where[] = "DATE(p.tgl_daftar) BETWEEN '" .
+    mysqli_real_escape_string($conn, $filterTglAwal) .
+    "'AND'" .
+    mysqli_real_escape_string($conn, $filterTglAkhir) .
+    "'";
+
+if ($filterPoli !== '') {
+    $where[] = "p.poli = '" . mysqli_real_escape_string($conn, $filterPoli) . "'";
+}
+if ($filterStatus !== '') {
+    $where[] = "p.status_daftar = '" . mysqli_real_escape_string($conn, $filterStatus) . "'";
+}
 $whereClause = 'WHERE ' . implode(' AND ', $where);
 
 $sql = "
-    SELECT p.*, ps.nama AS nama_pasien, ps.no_rm,
-           d.nama_dokter, d.spesialis
+    SELECT 
+        p.*, 
+        ps.nama AS nama_pasien,
+        ps.no_rm,
+        d.nama_dokter, 
+        d.spesialis
     FROM pendaftaran p
     JOIN pasien ps ON ps.id_pasien = p.id_pasien
     JOIN dokter d  ON d.id_dokter  = p.id_dokter
     $whereClause
-    ORDER BY p.no_antrean ASC
+    ORDER BY p.tgl_daftar DESC, p.no_antrean ASC
 ";
 $result = mysqli_query($conn, $sql);
 
@@ -44,10 +61,35 @@ $result = mysqli_query($conn, $sql);
 $poliList = mysqli_query($conn, "SELECT DISTINCT poli FROM pendaftaran ORDER BY poli ASC");
 
 // Stat hari ini
-$statMenunggu  = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'MENUNGGU'"))[0]  ?? 0;
-$statDipanggil = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'DIPANGGIL'"))[0] ?? 0;
-$statSelesai   = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl' AND status_daftar = 'SELESAI'"))[0]   ?? 0;
-$statTotal     = mysqli_fetch_row(mysqli_query($conn, "SELECT COUNT(*) FROM pendaftaran WHERE DATE(tgl_daftar) = '$filterTgl'"))[0] ?? 0;
+$tglAwal = mysqli_real_escape_string($conn, $filterTglAwal);
+$tglAkhir = mysqli_real_escape_string($conn, $filterTglAkhir);
+
+$statMenunggu = mysqli_fetch_row(mysqli_query(
+    $conn,
+    "SELECT COUNT(*) FROM pendaftaran
+     WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'
+     AND status_daftar = 'MENUNGGU'"
+))[0] ?? 0;
+
+$statDipanggil = mysqli_fetch_row(mysqli_query(
+    $conn,
+    "SELECT COUNT(*) FROM pendaftaran
+     WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'
+     AND status_daftar='DIPANGGIL'"
+))[0] ?? 0;
+
+$statSelesai = mysqli_fetch_row(mysqli_query(
+    $conn,
+    "SELECT COUNT(*) FROM pendaftaran
+     WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'
+     AND status_daftar='SELESAI'"
+))[0] ?? 0;
+
+$statTotal = mysqli_fetch_row(mysqli_query(
+    $conn,
+    "SELECT COUNT(*) FROM pendaftaran
+     WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'"
+))[0] ?? 0;
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
@@ -67,7 +109,7 @@ include '../includes/sidebar.php';
     </div>
 
     <?php if ($pesan): ?>
-    <div class="alert alert-<?= $pesan['tipe'] ?>"><?= $pesan['teks'] ?></div>
+        <div class="alert alert-<?= $pesan['tipe'] ?>"><?= $pesan['teks'] ?></div>
     <?php endif; ?>
 
     <!-- Stat mini -->
@@ -95,27 +137,41 @@ include '../includes/sidebar.php';
         <div class="card-body" style="padding:1rem 1.5rem">
             <form method="GET" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end">
                 <div>
-                    <label style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Tanggal</label>
-                    <input type="date" name="tgl" value="<?= htmlspecialchars($filterTgl) ?>"
-                           style="padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
+                    <label
+                        style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Mulai
+                        Tanggal</label>
+                    <input type="date" name="tgl_awal" value="<?= htmlspecialchars($filterTglAwal) ?>"
+                        style="padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
+                </div>
+                <div>
+                    <label
+                        style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Sampai
+                        Tanggal</label>
+                    <input type="date" name="tgl_akhir" value="<?= htmlspecialchars($filterTglAkhir) ?>"
+                        style="padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                 </div>
                 <div style="min-width:140px">
-                    <label style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Poli</label>
-                    <select name="poli" style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
+                    <label
+                        style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Poli</label>
+                    <select name="poli"
+                        style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                         <option value="">Semua poli</option>
                         <?php while ($p = mysqli_fetch_assoc($poliList)): ?>
-                        <option value="<?= htmlspecialchars($p['poli']) ?>" <?= $filterPoli === $p['poli'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($p['poli']) ?>
-                        </option>
+                            <option value="<?= htmlspecialchars($p['poli']) ?>" <?= $filterPoli === $p['poli'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($p['poli']) ?>
+                            </option>
                         <?php endwhile; ?>
                     </select>
                 </div>
                 <div style="min-width:140px">
-                    <label style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Status</label>
-                    <select name="status_daftar" style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
+                    <label
+                        style="font-size:12px;font-weight:500;color:var(--slate);display:block;margin-bottom:4px">Status</label>
+                    <select name="status_daftar"
+                        style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                         <option value="">Semua status</option>
-                        <?php foreach (['MENUNGGU','DIPANGGIL','SELESAI','BATAL'] as $st): ?>
-                        <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>><?= ucfirst(strtolower($st)) ?></option>
+                        <?php foreach (['MENUNGGU', 'DIPANGGIL', 'SELESAI', 'BATAL'] as $st): ?>
+                            <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>>
+                                <?= ucfirst(strtolower($st)) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -128,8 +184,7 @@ include '../includes/sidebar.php';
     <!-- Tabel antrian -->
     <div class="card">
         <div class="card-header">
-            <h2>Daftar antrian — <?= date('d F Y', strtotime($filterTgl)) ?></h2>
-            <span style="font-size:12px;color:var(--slate)"><?= mysqli_num_rows($result) ?> pendaftaran</span>
+<h2>Daftar antrian — <?= date('d M Y', strtotime($filterTglAwal)) ?> s/d <?= date('d M Y', strtotime($filterTglAkhir)) ?></h2>            <span style="font-size:12px;color:var(--slate)"><?= mysqli_num_rows($result) ?> pendaftaran</span>
         </div>
         <div class="table-wrap">
             <table>
@@ -147,63 +202,65 @@ include '../includes/sidebar.php';
                     </tr>
                 </thead>
                 <tbody>
-                <?php if (mysqli_num_rows($result) > 0):
-                    while ($row = mysqli_fetch_assoc($result)): ?>
-                <tr>
-                    <td style="text-align:center">
-                        <strong style="font-size:16px"><?= htmlspecialchars($row['no_antrean']) ?></strong>
-                    </td>
-                    <td><?= htmlspecialchars($row['no_rm']) ?></td>
-                    <td><strong><?= htmlspecialchars($row['nama_pasien']) ?></strong></td>
-                    <td>
-                        <?= htmlspecialchars($row['nama_dokter']) ?>
-                        <div style="font-size:11.5px;color:var(--slate)"><?= htmlspecialchars($row['poli']) ?></div>
-                    </td>
-                    <td>
-                        <?php $jk = $row['jenis_kunjungan'] ?? 'Baru'; ?>
-                        <span class="badge <?= $jk === 'Baru' ? 'badge-info' : 'badge-gray' ?>"><?= $jk ?></span>
-                    </td>
-                    <td>
-                        <?php
-                        $penjamin = $row['jenis_penjamin'] ?? 'Umum';
-                        $pc = match($penjamin) { 'BPJS' => 'badge-info', 'Asuransi' => 'badge-warning', default => 'badge-gray' };
-                        echo '<span class="badge ' . $pc . '">' . htmlspecialchars($penjamin) . '</span>';
-                        if ($penjamin === 'BPJS' && !empty($row['no_kartu_bpjs'])):
-                        ?>
-                        <div style="font-size:11px;color:var(--slate)"><?= htmlspecialchars($row['no_kartu_bpjs']) ?></div>
-                        <?php endif; ?>
-                    </td>
-                    <td><?= date('H:i', strtotime($row['tgl_daftar'])) ?></td>
-                    <td>
-                        <?php
-                        $st = $row['status_daftar'];
-                        $sc = match($st) {
-                            'MENUNGGU'  => 'badge-warning',
-                            'DIPANGGIL' => 'badge-info',
-                            'SELESAI'   => 'badge-success',
-                            'BATAL'     => 'badge-danger',
-                            default     => 'badge-gray'
-                        };
-                        ?>
-                        <span class="badge <?= $sc ?>"><?= ucfirst(strtolower($st)) ?></span>
-                    </td>
-                    <td>
-                        <div style="display:flex;gap:6px;flex-wrap:wrap">
-                            <a href="edit.php?id=<?= $row['id_pendaftaran'] ?>" class="btn btn-secondary btn-sm">Edit</a>
-                            <a href="hapus.php?id=<?= $row['id_pendaftaran'] ?>"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Hapus pendaftaran ini?')">Hapus</a>
-                        </div>
-                    </td>
-                </tr>
-                <?php endwhile; else: ?>
-                <tr>
-                    <td colspan="9" style="text-align:center;padding:2.5rem;color:var(--slate)">
-                        Tidak ada pendaftaran pada tanggal ini.<br>
-                        <a href="daftar.php" class="btn btn-primary btn-sm" style="margin-top:0.75rem">+ Tambah pendaftaran</a>
-                    </td>
-                </tr>
-                <?php endif; ?>
+                    <?php if (mysqli_num_rows($result) > 0):
+                        while ($row = mysqli_fetch_assoc($result)): ?>
+                            <tr>
+                                <td style="text-align:center">
+                                    <strong style="font-size:16px"><?= htmlspecialchars($row['no_antrean']) ?></strong>
+                                </td>
+                                <td><?= htmlspecialchars($row['no_rm']) ?></td>
+                                <td><strong><?= htmlspecialchars($row['nama_pasien']) ?></strong></td>
+                                <td>
+                                    <?= htmlspecialchars($row['nama_dokter']) ?>
+                                    <div style="font-size:11.5px;color:var(--slate)"><?= htmlspecialchars($row['poli']) ?></div>
+                                </td>
+                                <td>
+                                    <?php $jk = $row['jenis_kunjungan'] ?? 'Baru'; ?>
+                                    <span class="badge <?= $jk === 'Baru' ? 'badge-info' : 'badge-gray' ?>"><?= $jk ?></span>
+                                </td>
+                                <td>
+                                    <?php
+                                    $penjamin = $row['jenis_penjamin'] ?? 'Umum';
+                                    $pc = match ($penjamin) { 'BPJS' => 'badge-info', 'Asuransi' => 'badge-warning', default => 'badge-gray'};
+                                    echo '<span class="badge ' . $pc . '">' . htmlspecialchars($penjamin) . '</span>';
+                                    if ($penjamin === 'BPJS' && !empty($row['no_kartu_bpjs'])):
+                                        ?>
+                                        <div style="font-size:11px;color:var(--slate)">
+                                            <?= htmlspecialchars($row['no_kartu_bpjs']) ?></div>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= date('H:i', strtotime($row['tgl_daftar'])) ?></td>
+                                <td>
+                                    <?php
+                                    $st = $row['status_daftar'];
+                                    $sc = match ($st) {
+                                        'MENUNGGU' => 'badge-warning',
+                                        'DIPANGGIL' => 'badge-info',
+                                        'SELESAI' => 'badge-success',
+                                        'BATAL' => 'badge-danger',
+                                        default => 'badge-gray'
+                                    };
+                                    ?>
+                                    <span class="badge <?= $sc ?>"><?= ucfirst(strtolower($st)) ?></span>
+                                </td>
+                                <td>
+                                    <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                        <a href="edit.php?id=<?= $row['id_pendaftaran'] ?>"
+                                            class="btn btn-secondary btn-sm">Edit</a>
+                                        <a href="hapus.php?id=<?= $row['id_pendaftaran'] ?>" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Hapus pendaftaran ini?')">Hapus</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; else: ?>
+                        <tr>
+                            <td colspan="9" style="text-align:center;padding:2.5rem;color:var(--slate)">
+                                Tidak ada pendaftaran pada tanggal ini.<br>
+                                <a href="daftar.php" class="btn btn-primary btn-sm" style="margin-top:0.75rem">+ Tambah
+                                    pendaftaran</a>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
