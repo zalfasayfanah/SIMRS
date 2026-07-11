@@ -30,7 +30,7 @@ $where = [];
 
 $where[] = "DATE(p.tgl_daftar) BETWEEN '" .
     mysqli_real_escape_string($conn, $filterTglAwal) .
-    "'AND'" .
+    "' AND '" .
     mysqli_real_escape_string($conn, $filterTglAkhir) .
     "'";
 
@@ -75,8 +75,10 @@ $statDipanggil = mysqli_fetch_row(mysqli_query(
     $conn,
     "SELECT COUNT(*) FROM pendaftaran
      WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'
-     AND status_daftar='DIPANGGIL'"
+     AND status_daftar = 'DIPANGGIL'"
 ))[0] ?? 0;
+
+$statDiperiksa = $statDipanggil;
 
 $statSelesai = mysqli_fetch_row(mysqli_query(
     $conn,
@@ -123,8 +125,8 @@ include '../includes/sidebar.php';
             <div class="stat-value"><?= $statMenunggu ?></div>
         </div>
         <div class="stat-card info">
-            <div class="stat-label">Dipanggil</div>
-            <div class="stat-value"><?= $statDipanggil ?></div>
+            <div class="stat-label">Diperiksa</div>
+            <div class="stat-value"><?= $statDiperiksa ?></div>
         </div>
         <div class="stat-card accent">
             <div class="stat-label">Selesai</div>
@@ -169,9 +171,8 @@ include '../includes/sidebar.php';
                     <select name="status_daftar"
                         style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                         <option value="">Semua status</option>
-                        <?php foreach (['MENUNGGU', 'DIPANGGIL', 'SELESAI', 'BATAL'] as $st): ?>
-                            <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>>
-                                <?= ucfirst(strtolower($st)) ?></option>
+                        <?php foreach (['MENUNGGU','DIPANGGIL','SELESAI','BATAL'] as $st): ?>
+                        <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>><?= ucfirst(strtolower($st)) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>

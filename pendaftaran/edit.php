@@ -127,7 +127,7 @@ include '../includes/sidebar.php';
                 <div class="form-group">
                     <label>Status Antrian <span style="color:var(--danger)">*</span></label>
                     <select name="status_daftar">
-                        <?php foreach (['MENUNGGU','DIPANGGIL','SELESAI','BATAL'] as $st): ?>
+                        <?php foreach (['MENUNGGU','DIPERIKSA','SELESAI','BATAL'] as $st): ?>
                         <option value="<?= $st ?>" <?= $input['status_daftar'] === $st ? 'selected' : '' ?>>
                             <?= ucfirst(strtolower($st)) ?>
                         </option>
