@@ -172,8 +172,6 @@ style="flex:1">
 
 <option value="LUNAS" <?= $status=='LUNAS'?'selected':'' ?>>LUNAS</option>
 
-<option value="CICIL" <?= $status=='CICIL'?'selected':'' ?>>CICIL</option>
-
 <option value="BATAL" <?= $status=='BATAL'?'selected':'' ?>>BATAL</option>
 
 </select>
@@ -259,10 +257,6 @@ switch($row['status_bayar']){
         $badge='badge-warning';
         break;
 
-    case 'CICIL':
-        $badge='badge-info';
-        break;
-
     case 'BATAL':
         $badge='badge-danger';
         break;
@@ -316,28 +310,31 @@ Rp <?= number_format($row['total_biaya'],0,',','.') ?>
 
 <td>
 
-<span class="badge <?= $badge ?>">
+<div style="display:flex;gap:6px;flex-wrap:wrap">
 
-<?= htmlspecialchars($row['status_bayar']) ?>
+<?php if($row['status_bayar'] == 'BELUM'): ?>
 
-</span>
+<a
+href="../pembayaran/bayar.php?id=<?= $row['id_tagihan']; ?>"
+class="btn btn-success btn-sm">
 
-</td>
+Bayar
 
-<td>
+</a>
 
-<div style="display:flex;gap:6px">
+<?php endif; ?>
 
-<a href="edit.php?id=<?= $row['id_tagihan'] ?>" class="btn btn-secondary btn-sm">
+<a
+href="edit.php?id=<?= $row['id_tagihan']; ?>"
+class="btn btn-secondary btn-sm">
 
 Edit
 
 </a>
 
-<a href="hapus.php?id=<?= $row['id_tagihan'] ?>"
-
+<a
+href="hapus.php?id=<?= $row['id_tagihan']; ?>"
 class="btn btn-danger btn-sm"
-
 onclick="return confirm('Hapus tagihan ini?')">
 
 Hapus

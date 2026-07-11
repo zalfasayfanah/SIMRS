@@ -8,77 +8,38 @@ require_once '../config/database.php';
 
 $basePath = '../';
 $pageTitle = 'Pembayaran';
-//==================================================
-// Ambil ID Tagihan dari halaman Tagihan
-//==================================================
+
+// ============================================================
+// Ambil ID Tagihan (jika dari halaman Tagihan)
+// ============================================================
 
 $id_tagihan = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-$dataTagihan = null;
-
-if ($id_tagihan > 0) {
-
-    $queryTagihan = mysqli_prepare($conn, "
-
-        SELECT
-
-        t.id_tagihan,
-        t.no_invoice,
-        t.total_biaya,
-        t.penjamin,
-
-        ps.nama,
-        ps.no_rm,
-
-        p.tgl_daftar
-
-        FROM tagihan t
-
-        JOIN pendaftaran p
-        ON t.id_pendaftaran = p.id_pendaftaran
-
-        JOIN pasien ps
-        ON p.id_pasien = ps.id_pasien
-
-        WHERE t.id_tagihan = ?
-
-    ");
-
-    mysqli_stmt_bind_param($queryTagihan, "i", $id_tagihan);
-
-    mysqli_stmt_execute($queryTagihan);
-
-    $hasilTagihan = mysqli_stmt_get_result($queryTagihan);
-
-    $dataTagihan = mysqli_fetch_assoc($hasilTagihan);
-
-}
-
-//==================================================
+// ============================================================
 // Simpan Pembayaran
-//==================================================
+// ============================================================
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    $id_tagihan   = (int) $_POST['id_tagihan'];
-    $jumlah_bayar = (float) $_POST['jumlah_bayar'];
+    $id_tagihan   = (int)$_POST['id_tagihan'];
+    $jumlah_bayar = (float)$_POST['jumlah_bayar'];
     $metode       = trim($_POST['metode']);
     $no_referensi = trim($_POST['no_referensi']);
 
-    // Ambil data tagihan
-    $q = mysqli_prepare($conn, "
+    // Ambil total tagihan
+    $cek = mysqli_prepare($conn,"
         SELECT total_biaya
         FROM tagihan
-        WHERE id_tagihan = ?
+        WHERE id_tagihan=?
     ");
 
-    mysqli_stmt_bind_param($q, "i", $id_tagihan);
-    mysqli_stmt_execute($q);
+    mysqli_stmt_bind_param($cek,"i",$id_tagihan);
+    mysqli_stmt_execute($cek);
 
-    $hasil = mysqli_stmt_get_result($q);
+    $hasil = mysqli_stmt_get_result($cek);
     $tagihan = mysqli_fetch_assoc($hasil);
 
-    if (!$tagihan) {
+    if(!$tagihan){
 
         header("Location:index.php?status=gagal");
         exit;
@@ -87,17 +48,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $total = (float)$tagihan['total_biaya'];
 
-    //==================================================
-    // VALIDASI
-    //==================================================
+    // Validasi pembayaran harus lunas
 
-    if ($jumlah_bayar < $total) {
+    if($jumlah_bayar < $total){
 
         echo "<script>
 
-            alert('Jumlah pembayaran harus sama atau lebih besar dari total tagihan.');
+            alert('Jumlah pembayaran tidak boleh kurang dari total tagihan.');
 
-            window.history.back();
+            history.back();
 
         </script>";
 
@@ -105,20 +64,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     }
 
-    //==================================================
-    // HITUNG KEMBALIAN
-    //==================================================
-
     $kembalian = $jumlah_bayar - $total;
 
-    // Karena pembayaran harus lunas
-    $statusTagihan = "LUNAS";
+    // Simpan pembayaran
 
-    //==================================================
-    // SIMPAN PEMBAYARAN
-    //==================================================
-
-    $stmt = mysqli_prepare($conn, "
+    $stmt = mysqli_prepare($conn,"
 
         INSERT INTO pembayaran
         (
@@ -130,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         )
 
         VALUES
+
         (?,?,?,?,?)
 
     ");
@@ -148,10 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     );
 
-    if (mysqli_stmt_execute($stmt)) {
+    if(mysqli_stmt_execute($stmt)){
 
-        // Update status tagihan menjadi LUNAS
-        $up = mysqli_prepare($conn, "
+        // Update status tagihan
+
+        $up = mysqli_prepare($conn,"
 
             UPDATE tagihan
 
@@ -161,11 +113,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         ");
 
-        mysqli_stmt_bind_param($up, "i", $id_tagihan);
+        mysqli_stmt_bind_param($up,"i",$id_tagihan);
 
         mysqli_stmt_execute($up);
 
-        header("Location:index.php?status=bayar_ok");
+        header("Location:../tagihan/index.php?status=bayar_ok");
 
         exit;
 
@@ -177,39 +129,83 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 }
 
-//==================================================
-// Ambil semua tagihan yang belum lunas
-//==================================================
+// ============================================================
+// Ambil Data Tagihan
+// ============================================================
 
-$sql = "
+if($id_tagihan > 0){
 
-SELECT
+    // Jika dari halaman Tagihan
 
-t.id_tagihan,
-t.no_invoice,
-t.total_biaya,
-t.penjamin,
+    $sql="
 
-ps.nama,
-ps.no_rm,
+    SELECT
 
-p.tgl_daftar
+    t.id_tagihan,
+    t.no_invoice,
+    t.total_biaya,
+    t.penjamin,
 
-FROM tagihan t
+    ps.nama,
+    ps.no_rm,
 
-JOIN pendaftaran p
-ON p.id_pendaftaran=t.id_pendaftaran
+    p.tgl_daftar
 
-JOIN pasien ps
-ON ps.id_pasien=p.id_pasien
+    FROM tagihan t
 
-WHERE t.status_bayar<>'LUNAS'
+    JOIN pendaftaran p
+    ON t.id_pendaftaran=p.id_pendaftaran
 
-ORDER BY t.tgl_tagihan DESC
+    JOIN pasien ps
+    ON p.id_pasien=ps.id_pasien
 
-";
+    WHERE t.id_tagihan=$id_tagihan
+
+    ";
+
+}else{
+
+    // Jika dibuka dari menu Pembayaran
+
+    $sql="
+
+    SELECT
+
+    t.id_tagihan,
+    t.no_invoice,
+    t.total_biaya,
+    t.penjamin,
+
+    ps.nama,
+    ps.no_rm,
+
+    p.tgl_daftar
+
+    FROM tagihan t
+
+    JOIN pendaftaran p
+    ON t.id_pendaftaran=p.id_pendaftaran
+
+    JOIN pasien ps
+    ON p.id_pasien=ps.id_pasien
+
+    WHERE t.status_bayar='BELUM'
+
+    ORDER BY t.tgl_tagihan DESC
+
+    ";
+
+}
 
 $result = mysqli_query($conn,$sql);
+
+$dataTagihan = null;
+
+if($id_tagihan > 0){
+
+    $dataTagihan = mysqli_fetch_assoc($result);
+
+}
 
 include '../includes/header.php';
 include '../includes/sidebar.php';
@@ -227,7 +223,7 @@ include '../includes/sidebar.php';
 
 </div>
 
-<a href="index.php" class="btn btn-secondary">
+<a href="../tagihan/index.php" class="btn btn-secondary">
 
 Kembali
 
@@ -278,7 +274,7 @@ readonly>
 
 <div class="form-group">
 
-<label>No. Rekam Medis</label>
+<label>No Rekam Medis</label>
 
 <input
 type="text"
@@ -314,14 +310,18 @@ required>
 <?php while($row=mysqli_fetch_assoc($result)): ?>
 
 <option
-value="<?= $row['id_tagihan'] ?>"
-data-total="<?= $row['total_biaya'] ?>">
+value="<?= $row['id_tagihan']; ?>"
+data-total="<?= $row['total_biaya']; ?>">
 
-<?= htmlspecialchars($row['no_invoice']) ?>
+<?= htmlspecialchars($row['no_invoice']); ?>
+
 |
-<?= htmlspecialchars($row['nama']) ?>
+
+<?= htmlspecialchars($row['nama']); ?>
+
 |
-<?= htmlspecialchars($row['no_rm']) ?>
+
+<?= htmlspecialchars($row['no_rm']); ?>
 
 </option>
 
@@ -332,65 +332,35 @@ data-total="<?= $row['total_biaya'] ?>">
 </div>
 
 <?php endif; ?>
-
-<option value="">-- Pilih Tagihan --</option>
-
-<?php while($row=mysqli_fetch_assoc($result)): ?>
-
-<option
-
-value="<?= $row['id_tagihan'] ?>"
-
-data-total="<?= $row['total_biaya'] ?>"
-
->
-
-<?= htmlspecialchars($row['no_invoice']) ?>
-
-|
-
-<?= htmlspecialchars($row['nama']) ?>
-
-|
-
-<?= htmlspecialchars($row['no_rm']) ?>
-
-</option>
-
-<?php endwhile; ?>
-
-</select>
-
-</div>
-
 <div class="form-row">
 
-<div class="form-group">
+    <div class="form-group">
 
-<label>Total Tagihan</label>
+        <label>Total Tagihan</label>
 
-<input
-type="number"
-id="total"
-readonly
-value="<?= $dataTagihan ? $dataTagihan['total_biaya'] : ''; ?>">
+        <input
+            type="number"
+            id="total"
+            readonly
+            value="<?= $dataTagihan ? $dataTagihan['total_biaya'] : '' ?>">
+
+    </div>
+
+    <div class="form-group">
+
+        <label>Jumlah Bayar</label>
+
+        <input
+            type="number"
+            name="jumlah_bayar"
+            id="bayar"
+            min="0"
+            required>
+
+    </div>
 
 </div>
 
-<div class="form-group">
-
-<label>Jumlah Bayar</label>
-
-<input
-type="number"
-name="jumlah_bayar"
-id="bayar"
-min="0"
-required>
-
-</div>
-
-</div>
 <div class="form-row">
 
     <div class="form-group">
@@ -400,7 +370,6 @@ required>
         <input
             type="number"
             id="kembalian"
-            name="kembalian"
             value="0"
             readonly>
 
@@ -439,7 +408,7 @@ required>
 
 </div>
 
-<div style="display:flex;gap:10px;margin-top:20px">
+<div style="display:flex;gap:10px;margin-top:20px;">
 
     <button
         type="submit"
@@ -450,7 +419,7 @@ required>
     </button>
 
     <a
-        href="index.php"
+        href="../tagihan/index.php"
         class="btn btn-secondary">
 
         Batal
@@ -469,41 +438,45 @@ required>
 
 <script>
 
-const tagihan=document.getElementById('tagihan');
-const total=document.getElementById('total');
-const bayar=document.getElementById('bayar');
-const kembali=document.getElementById('kembalian');
+const tagihan = document.getElementById('tagihan');
+const total = document.getElementById('total');
+const bayar = document.getElementById('bayar');
+const kembalian = document.getElementById('kembalian');
 
-function hitung(){
+function hitungKembalian(){
 
-    let totalTagihan=parseFloat(total.value)||0;
+    let totalTagihan = parseFloat(total.value) || 0;
+    let uang = parseFloat(bayar.value) || 0;
 
-    let uang=parseFloat(bayar.value)||0;
+    if(uang >= totalTagihan){
 
-    if(uang>=totalTagihan){
-
-        kembali.value=uang-totalTagihan;
+        kembalian.value = uang - totalTagihan;
 
     }else{
 
-        kembali.value=0;
+        kembalian.value = 0;
 
     }
 
 }
 
-tagihan.addEventListener('change',function(){
+if(tagihan){
 
-    let option=this.options[this.selectedIndex];
+    tagihan.addEventListener('change',function(){
 
-    total.value=option.dataset.total || 0;
+        let option = this.options[this.selectedIndex];
 
-    hitung();
+        total.value = option.dataset.total || 0;
 
-});
+        hitungKembalian();
 
-bayar.addEventListener('keyup',hitung);
-bayar.addEventListener('change',hitung);
+    });
+
+}
+
+bayar.addEventListener('keyup', hitungKembalian);
+bayar.addEventListener('change', hitungKembalian);
+bayar.addEventListener('input', hitungKembalian);
 
 </script>
 

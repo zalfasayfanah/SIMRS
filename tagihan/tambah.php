@@ -219,7 +219,6 @@ min="0">
 
             <option value="BELUM" selected>BELUM</option>
             <option value="LUNAS">LUNAS</option>
-            <option value="CICIL">CICIL</option>
             <option value="BATAL">BATAL</option>
 
         </select>
