@@ -79,9 +79,37 @@ include '../includes/sidebar.php';
                     <td>
 
                     <?php
-                    $badge = $row['status_ambil'] == 'SUDAH'
-                            ? 'badge-success'
-                            : 'badge-warning';
+                    switch($row['status_ambil']){
+
+                    case 'MENUNGGU':
+
+                        $badge='badge-warning';
+
+                        break;
+
+                    case 'DIPROSES':
+
+                        $badge='badge-info';
+
+                        break;
+
+                    case 'SELESAI':
+
+                        $badge='badge-success';
+
+                        break;
+
+                    case 'BATAL':
+
+                        $badge='badge-danger';
+
+                        break;
+
+                    default:
+
+                        $badge='badge-secondary';
+
+                }  
                     ?>
 
                     <span class="badge <?= $badge ?>">
@@ -92,15 +120,35 @@ include '../includes/sidebar.php';
 
                     <td>
 
-                        <a href="detail.php?id=<?= $row['id_resep'] ?>"
-                           class="btn btn-secondary btn-sm">
-                            Detail
+                    <a href="detail.php?id=<?= $row['id_resep'] ?>"
+                    class="btn btn-secondary btn-sm">
+
+                        Detail
+
+                    </a>
+
+                    <?php if($row['status_ambil']=='MENUNGGU' || $row['status_ambil']=='DIPROSES'): ?>
+
+                        <a
+                        href="serahkan.php?id=<?= $row['id_resep'] ?>"
+                        class="btn btn-success btn-sm"
+                        onclick="return confirm('Serahkan obat kepada pasien?')">
+
+                            Serahkan Obat
+
                         </a>
 
-                        <a href="edit.php?id=<?= $row['id_resep'] ?>"
-                           class="btn btn-primary btn-sm">
-                            Edit
-                        </a>
+                        <?php else: ?>
+
+                            <button
+                            class="btn btn-success btn-sm"
+                            disabled>
+
+                                Sudah Diserahkan
+
+                            </button>
+
+                        <?php endif; ?>
 
                     </td>
 

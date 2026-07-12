@@ -36,13 +36,37 @@ if (isset($_POST['update'])) {
         mysqli_query($conn, "UPDATE obat SET stok = stok + {$cekOld['jumlah']} WHERE id_obat = '{$cekOld['id_obat']}'");
     }
 
-    header("Location:index.php");
+    if($status_ambil=='SELESAI'){
+
+    header("Location:../pembayaran/bayar.php?id=".$getTagihan['id_tagihan']);
+
+    }else{
+
+        header("Location:index.php");
+
+    }
+
     exit();
 }
 
-$data = mysqli_fetch_assoc(
-    mysqli_query($conn, "SELECT * FROM resep WHERE id_resep='$id'")
-);
+    $getTagihan = mysqli_fetch_assoc(mysqli_query($conn, "
+
+    SELECT t.id_tagihan
+
+    FROM tagihan t
+
+    JOIN pendaftaran pd
+    ON t.id_pendaftaran=pd.id_pendaftaran
+
+    JOIN pemeriksaan pm
+    ON pm.id_pendaftaran=pd.id_pendaftaran
+
+    JOIN resep r
+    ON r.id_pemeriksaan=pm.id_pemeriksaan
+
+    WHERE r.id_resep='$id'
+
+    "));
 
 include '../includes/header.php';
 include '../includes/sidebar.php';

@@ -456,7 +456,7 @@ if (isset($_POST['simpan_pemeriksaan'])) { // Sesuaikan dengan nama atribut 'nam
     </form>
 </div>
 
-<<script>
+<script>
     function tambahObat() {
         let tbody = document.getElementById("resepBody");
         // Menyalin baris pertama (otomatis menyertakan kolom dosis baru)

@@ -133,13 +133,71 @@ try {
 
         mysqli_stmt_execute($stmt);
 
-        //kurangi stok
-        mysqli_query($conn,"
-            UPDATE obat
-            SET stok = stok - $jml
-            WHERE id_obat='$id_obat'
-        ");
     }
+    /* ===========================================
+   BUAT TAGIHAN OTOMATIS
+=========================================== */
+
+// Hitung total biaya obat
+$totalObat = 0;
+
+foreach($obat as $i => $id_obat){
+
+    if(empty($id_obat)){
+        continue;
+    }
+
+    $jml = $jumlah[$i];
+
+    $q = mysqli_query($conn,"
+        SELECT harga
+        FROM obat
+        WHERE id_obat='$id_obat'
+    ");
+
+    $o = mysqli_fetch_assoc($q);
+
+    $totalObat += ($o['harga'] * $jml);
+
+}
+
+// Cek apakah tagihan sudah ada
+$cekTagihan = mysqli_query($conn,"
+SELECT id_tagihan
+FROM tagihan
+WHERE id_pendaftaran='$id_pendaftaran'
+");
+
+if(mysqli_num_rows($cekTagihan)==0){
+
+    $invoice =
+        "INV".
+        date("YmdHis");
+
+    mysqli_query($conn,"
+    INSERT INTO tagihan
+    (
+        id_pendaftaran,
+        no_invoice,
+        tgl_tagihan,
+        total_biaya,
+        diskon,
+        penjamin,
+        status_bayar
+    )
+    VALUES
+    (
+        '$id_pendaftaran',
+        '$invoice',
+        NOW(),
+        '$totalObat',
+        0,
+        'UMUM',
+        'BELUM'
+    )
+    ");
+
+}
 
     /* ===========================================
        UPDATE STATUS PENDAFTARAN
