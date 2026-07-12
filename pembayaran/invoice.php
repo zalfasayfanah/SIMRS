@@ -9,7 +9,7 @@ require_once '../config/database.php';
 $basePath='../';
 $pageTitle='Invoice Pembayaran';
 
-$id=(int)($_GET['id'] ?? 0);
+$id_tagihan = (int)($_GET['id'] ?? 0);
 
 $sql="
 
@@ -21,6 +21,7 @@ tg.no_invoice,
 tg.total_biaya,
 tg.diskon,
 tg.penjamin,
+tg.status_bayar,
 
 ps.nama,
 ps.no_rm,
@@ -47,13 +48,17 @@ ON pd.id_pasien=ps.id_pasien
 JOIN dokter d
 ON pd.id_dokter=d.id_dokter
 
-WHERE pb.id_pembayaran=?
+WHERE tg.id_tagihan=?
+
+ORDER BY pb.id_pembayaran DESC
+
+LIMIT 1
 
 ";
 
 $stmt=mysqli_prepare($conn,$sql);
 
-mysqli_stmt_bind_param($stmt,"i",$id);
+mysqli_stmt_bind_param($stmt,"i",$id_tagihan);
 
 mysqli_stmt_execute($stmt);
 
@@ -63,7 +68,15 @@ $data=mysqli_fetch_assoc($result);
 
 if(!$data){
 
-die("Invoice tidak ditemukan.");
+    echo "<script>
+
+    alert('Invoice tidak ditemukan.');
+
+    window.location='../tagihan/index.php';
+
+    </script>";
+
+    exit;
 
 }
 
@@ -92,7 +105,7 @@ Cetak Invoice
 
 </button>
 
-<a href="index.php" class="btn btn-secondary">
+<a href="../pembayaran/index.php" class="btn btn-secondary">
 
 Kembali
 
@@ -209,7 +222,7 @@ SIMRS FRONT OFFICE
 
             <td style="padding:10px;text-align:right">
 
-                Rp <?= number_format($data['diskon'],0,',','.') ?>
+                Rp <?= number_format($data['diskon'] ?? 0,0,',','.') ?>
 
             </td>
 
@@ -245,7 +258,7 @@ SIMRS FRONT OFFICE
 
             <td style="padding:10px;text-align:right">
 
-                Rp <?= number_format($data['jumlah_bayar'],0,',','.') ?>
+                Rp <?= number_format($data['jumlah_bayar'] ?? 0,0,',','.') ?>
 
             </td>
 
@@ -257,7 +270,7 @@ SIMRS FRONT OFFICE
 
             <td style="padding:10px;text-align:right">
 
-                Rp <?= number_format($data['kembalian'],0,',','.') ?>
+                Rp <?= number_format($data['kembalian'] ?? 0,0,',','.') ?>
 
             </td>
 
@@ -273,7 +286,7 @@ SIMRS FRONT OFFICE
 
             <td style="padding:12px;text-align:right">
 
-                <?= htmlspecialchars($data['status_konfirmasi']) ?>
+                <<?= htmlspecialchars($data['status_bayar']) ?>
 
             </td>
 

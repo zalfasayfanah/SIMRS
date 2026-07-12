@@ -60,20 +60,16 @@ $sql="
 
 SELECT
 
-pb.*,
-
+t.id_tagihan,
 t.no_invoice,
-
 t.total_biaya,
+t.status_bayar,
+t.penjamin,
 
 ps.nama,
-
 ps.no_rm
 
-FROM pembayaran pb
-
-JOIN tagihan t
-ON pb.id_tagihan=t.id_tagihan
+FROM tagihan t
 
 JOIN pendaftaran p
 ON t.id_pendaftaran=p.id_pendaftaran
@@ -83,7 +79,7 @@ ON p.id_pasien=ps.id_pasien
 
 $where
 
-ORDER BY pb.tgl_bayar DESC
+ORDER BY t.tgl_tagihan DESC
 
 ";
 
@@ -192,10 +188,6 @@ Reset
 
 <th>Total</th>
 
-<th>Bayar</th>
-
-<th>Metode</th>
-
 <th>Status</th>
 
 <th>Aksi</th>
@@ -213,23 +205,18 @@ $no=1;
 
 while($row=mysqli_fetch_assoc($result)):
 
-switch($row['status_konfirmasi']){
+switch($row['status_bayar']){
 
-    case 'KONFIRMASI':
+    case 'LUNAS':
         $badge='badge-success';
         break;
 
-    case 'MENUNGGU':
+    case 'BELUM':
         $badge='badge-warning';
-        break;
-
-    case 'BATAL':
-        $badge='badge-danger';
         break;
 
     default:
         $badge='badge-gray';
-
 }
 
 ?>
@@ -268,21 +255,9 @@ Rp <?= number_format($row['total_biaya'],0,',','.') ?>
 
 <td>
 
-Rp <?= number_format($row['jumlah_bayar'],0,',','.') ?>
-
-</td>
-
-<td>
-
-<?= htmlspecialchars($row['metode']) ?>
-
-</td>
-
-<td>
-
 <span class="badge <?= $badge ?>">
 
-<?= htmlspecialchars($row['status_konfirmasi']) ?>
+<?= htmlspecialchars($row['status_bayar']) ?>
 
 </span>
 
@@ -292,20 +267,27 @@ Rp <?= number_format($row['jumlah_bayar'],0,',','.') ?>
 
 <div style="display:flex;gap:6px">
 
-<a href="edit.php?id=<?= $row['id_pembayaran'] ?>"
-class="btn btn-secondary btn-sm">
+<?php if($row['status_bayar']=='BELUM'): ?>
 
-Edit
+<a
+href="bayar.php?id=<?= $row['id_tagihan'] ?>"
+class="btn btn-success btn-sm">
+
+Bayar
+
+</a>
+
+<?php else: ?>
+
+<a
+href="invoice.php?id=<?= $row['id_tagihan'] ?>"
+class="btn btn-primary btn-sm">
+
+Invoice
 
 </a>
 
-<a href="hapus.php?id=<?= $row['id_pembayaran'] ?>"
-class="btn btn-danger btn-sm"
-onclick="return confirm('Yakin ingin menghapus pembayaran ini?')">
-
-Hapus
-
-</a>
+<?php endif; ?>
 
 </div>
 

@@ -75,13 +75,7 @@ $isDashboard = !str_contains($currentPage, '/dokter/')
             <span class="nav-icon">&#9632;</span>
             Farmasi
         </a>
-
-
-        <a href="<?= $basePath ?? '' ?>tagihan/index.php" class="nav-item <?= isActive('/tagihan/') ?>">
-            <span class="nav-icon">&#9632;</span>
-            Tagihan
-        </a>
-
+        
         <a href="<?= $basePath ?? '' ?>pembayaran/index.php" class="nav-item <?= isActive('/pembayaran/') ?>">
             <span class="nav-icon">&#9632;</span>
             Pembayaran
