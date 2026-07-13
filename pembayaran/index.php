@@ -96,17 +96,11 @@ include '../includes/sidebar.php';
 
 <div>
 
-<h1>Billing / Pembayaran</h1>
+<h1>Pembayaran</h1>
 
 <p>Kelola pembayaran pasien.</p>
 
 </div>
-
-<a href="bayar.php" class="btn btn-primary">
-
-+ Pembayaran Baru
-
-</a>
 
 </div>
 

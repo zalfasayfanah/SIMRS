@@ -117,8 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         mysqli_stmt_execute($up);
 
-        header("Location:../tagihan/index.php?status=bayar_ok");
-
+        header("Location:index.php?status=tambah_ok");
         exit;
 
     }
@@ -223,7 +222,7 @@ include '../includes/sidebar.php';
 
 </div>
 
-<a href="../tagihan/index.php" class="btn btn-secondary">
+<a href="index.php" class="btn btn-secondary">
 
 Kembali
 
@@ -419,7 +418,7 @@ data-total="<?= $row['total_biaya']; ?>">
     </button>
 
     <a
-        href="../tagihan/index.php"
+        href="index.php"
         class="btn btn-secondary">
 
         Batal

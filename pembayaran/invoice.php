@@ -72,7 +72,7 @@ if(!$data){
 
     alert('Invoice tidak ditemukan.');
 
-    window.location='../tagihan/index.php';
+    window.location='index.php';
 
     </script>";
 
