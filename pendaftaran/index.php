@@ -71,14 +71,14 @@ $statMenunggu = mysqli_fetch_row(mysqli_query(
      AND status_daftar = 'MENUNGGU'"
 ))[0] ?? 0;
 
-$statDipanggil = mysqli_fetch_row(mysqli_query(
+$statDiperiksa = mysqli_fetch_row(mysqli_query(
     $conn,
     "SELECT COUNT(*) FROM pendaftaran
      WHERE DATE(tgl_daftar) BETWEEN '$tglAwal' AND '$tglAkhir'
-     AND status_daftar = 'DIPANGGIL'"
+     AND status_daftar = 'DIPERIKSA'"
 ))[0] ?? 0;
 
-$statDiperiksa = $statDipanggil;
+$statDiperiksa = $statDiperiksa;
 
 $statSelesai = mysqli_fetch_row(mysqli_query(
     $conn,
@@ -171,7 +171,7 @@ include '../includes/sidebar.php';
                     <select name="status_daftar"
                         style="width:100%;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:7px;font-size:13.5px">
                         <option value="">Semua status</option>
-                        <?php foreach (['MENUNGGU','DIPANGGIL','SELESAI','BATAL'] as $st): ?>
+                        <?php foreach (['MENUNGGU','DIPERIKSA','SELESAI','BATAL'] as $st): ?>
                         <option value="<?= $st ?>" <?= $filterStatus === $st ? 'selected' : '' ?>><?= ucfirst(strtolower($st)) ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -236,7 +236,7 @@ include '../includes/sidebar.php';
                                     $st = $row['status_daftar'];
                                     $sc = match ($st) {
                                         'MENUNGGU' => 'badge-warning',
-                                        'DIPANGGIL' => 'badge-info',
+                                        'DIPERIKSA' => 'badge-info',
                                         'SELESAI' => 'badge-success',
                                         'BATAL' => 'badge-danger',
                                         default => 'badge-gray'
