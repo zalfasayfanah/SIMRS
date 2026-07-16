@@ -29,13 +29,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validasi wajib
     if ($input['nik']    === '') $errors['nik']    = 'NIK wajib diisi.';
     elseif (!preg_match('/^\d{16}$/', $input['nik'])) $errors['nik'] = 'NIK harus 16 digit angka.';
-    if ($input['nama']   === '') $errors['nama']   = 'Nama pasien wajib diisi.';
+    if ($input['nama']              === '') $errors['nama']              = 'Nama pasien wajib diisi.';
     if ($input['tgl_lahir']         === '') $errors['tgl_lahir']         = 'Tanggal lahir wajib diisi.';
     if ($input['jenis_kelamin']     === '') $errors['jenis_kelamin']     = 'Jenis kelamin wajib dipilih.';
     if ($input['agama']             === '') $errors['agama']             = 'Agama wajib diisi.';
+    if ($input['alamat']            === '') $errors['alamat']            = 'Alamat wajib diisi.';
     if ($input['pekerjaan']         === '') $errors['pekerjaan']         = 'Pekerjaan wajib diisi.';
     if ($input['pendidikan']        === '') $errors['pendidikan']        = 'Pendidikan wajib dipilih.';
     if ($input['status_perkawinan'] === '') $errors['status_perkawinan'] = 'Status perkawinan wajib dipilih.';
+    if ($input['nama_wali']         === '') $errors['nama_wali']         = 'Nama wali wajib diisi.';
+    if ($input['hubungan_wali']     === '') $errors['hubungan_wali']     = 'Hubungan wali wajib dipilih.';
+    if ($input['no_hp_wali']        === '') $errors['no_hp_wali']        = 'No. HP wali wajib diisi.';
 
     // Cek duplikat NIK
     if (empty($errors['nik'])) {
@@ -44,14 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        // Generate No. RM otomatis, format: RM-YYYY-XXXX (urut per tahun)
+        // Generate No. RM otomatis format: RM-YYYY-XXXX
         $tahunIni = date('Y');
         $cekUrut  = mysqli_query($conn,
             "SELECT no_rm FROM pasien WHERE no_rm LIKE 'RM-$tahunIni-%' ORDER BY no_rm DESC LIMIT 1");
         if ($cekUrut && mysqli_num_rows($cekUrut) > 0) {
-            $lastRm   = mysqli_fetch_assoc($cekUrut)['no_rm'];
-            $lastNum  = (int) substr($lastRm, -4);
-            $nextNum  = $lastNum + 1;
+            $lastRm  = mysqli_fetch_assoc($cekUrut)['no_rm'];
+            $lastNum = (int) substr($lastRm, -4);
+            $nextNum = $lastNum + 1;
         } else {
             $nextNum = 1;
         }
@@ -161,8 +165,9 @@ include '../includes/sidebar.php';
             </div>
 
             <div class="form-group">
-                <label>Alamat</label>
+                <label>Alamat <span style="color:var(--danger)">*</span></label>
                 <textarea name="alamat" placeholder="Alamat lengkap sesuai KTP"><?= htmlspecialchars($input['alamat'] ?? '') ?></textarea>
+                <?php if (isset($errors['alamat'])): ?><div class="form-hint" style="color:var(--danger)"><?= $errors['alamat'] ?></div><?php endif; ?>
             </div>
 
             <!-- Data sosial minimal -->
@@ -199,28 +204,30 @@ include '../includes/sidebar.php';
                 </div>
             </div>
 
-            <!-- Data wali (opsional) -->
+            <!-- Data wali -->
             <div style="border-top:1px solid var(--border);margin:0 0 1.25rem;padding-top:1.25rem">
-                <div style="font-size:13px;font-weight:500;color:var(--navy);margin-bottom:0.25rem">Data wali / penanggung jawab</div>
-                <div style="font-size:12px;color:var(--slate);margin-bottom:1rem">Opsional — isi jika pasien anak-anak, lansia, atau tidak dapat bertindak sendiri</div>
+                <div style="font-size:13px;font-weight:500;color:var(--navy);margin-bottom:1rem">Data wali / penanggung jawab</div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Nama Wali</label>
+                        <label>Nama Wali <span style="color:var(--danger)">*</span></label>
                         <input type="text" name="nama_wali" value="<?= htmlspecialchars($input['nama_wali'] ?? '') ?>" placeholder="Nama lengkap wali">
+                        <?php if (isset($errors['nama_wali'])): ?><div class="form-hint" style="color:var(--danger)"><?= $errors['nama_wali'] ?></div><?php endif; ?>
                     </div>
                     <div class="form-group">
-                        <label>Hubungan dengan Pasien</label>
+                        <label>Hubungan dengan Pasien <span style="color:var(--danger)">*</span></label>
                         <select name="hubungan_wali">
                             <option value="">-- Pilih --</option>
                             <?php foreach (['Orang Tua','Suami','Istri','Anak','Saudara','Lainnya'] as $hub): ?>
                             <option value="<?= $hub ?>" <?= ($input['hubungan_wali'] ?? '') === $hub ? 'selected' : '' ?>><?= $hub ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <?php if (isset($errors['hubungan_wali'])): ?><div class="form-hint" style="color:var(--danger)"><?= $errors['hubungan_wali'] ?></div><?php endif; ?>
                     </div>
                 </div>
                 <div class="form-group" style="max-width:50%">
-                    <label>No. HP Wali</label>
+                    <label>No. HP Wali <span style="color:var(--danger)">*</span></label>
                     <input type="text" name="no_hp_wali" value="<?= htmlspecialchars($input['no_hp_wali'] ?? '') ?>" placeholder="08xxxxxxxxxx">
+                    <?php if (isset($errors['no_hp_wali'])): ?><div class="form-hint" style="color:var(--danger)"><?= $errors['no_hp_wali'] ?></div><?php endif; ?>
                 </div>
             </div>
 

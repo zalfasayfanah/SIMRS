@@ -106,7 +106,7 @@ include '../includes/sidebar.php';
         </div>
         <div style="display:flex;gap:0.75rem">
             <a href="../pasien/tambah.php" class="btn btn-secondary">+ Pasien Baru</a>
-            <a href="daftar.php" class="btn btn-primary">+ Pasien Lama </a>
+            <a href="daftar.php" class="btn btn-primary">+ Pendaftaran </a>
         </div>
     </div>
 

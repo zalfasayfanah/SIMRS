@@ -101,7 +101,7 @@ $dataPemeriksaan = mysqli_query($conn, $sqlPemeriksaan);
     <div class="card">
         <div class="card-header">
             <h2>Pendaftaran hari ini</h2>
-            <a href="pages/pendaftaran/daftar.php" class="btn btn-primary btn-sm">+ Pendaftaran baru</a>
+            <a href="pendaftaran/daftar.php" class="btn btn-primary btn-sm">+ Pendaftaran baru</a>
         </div>
         <div class="table-wrap">
             <table>
@@ -162,7 +162,7 @@ $dataPemeriksaan = mysqli_query($conn, $sqlPemeriksaan);
                         <tr>
                             <td colspan="8" style="text-align:center;padding:2rem;color:var(--slate)">
                                 Belum ada pendaftaran hari ini.<br>
-                                <a href="pages/pendaftaran/daftar.php" class="btn btn-primary btn-sm"
+                                <a href="pendaftaran/daftar.php" class="btn btn-primary btn-sm"
                                     style="margin-top:0.75rem">
                                     + Tambah pendaftaran
                                 </a>
